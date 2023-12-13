@@ -55,7 +55,7 @@ async def get_info_instagram(url):
         followed = WebDriverWait(browser,10).until(
           EC.presence_of_element_located((By.XPATH,"//html/body/div[2]/div/div/div[2]/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[3]/a/span/span"))
         ).text
-        with open('selenium_data_found/instagram.txt', 'w', encoding='utf-8') as file:
+        with open('instagram.txt', 'w', encoding='utf-8') as file:
                 file.write("Instagram De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
                 file.write("Publicaciones: " + posts + "\n")
@@ -93,7 +93,7 @@ async def get_info_facebook(url):
             EC.presence_of_element_located((By.XPATH, "//html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[1]/div[2]/div/div[1]/div/div/div/div/div[2]/div[1]/div/div/span"))
         ).get_attribute('innerHTML')
 
-        with open('selenium_data_found/facebook.txt', 'w', encoding='utf-8') as file:
+        with open('facebook.txt', 'w', encoding='utf-8') as file:
             file.write("Facebook De: " + pagina + "\n")
             file.write("Informacion: " + informacion + "\n")
             file.write("likes: " + likes + "\n")
@@ -141,7 +141,7 @@ async def get_info_twitter(url):
         followed = WebDriverWait(browser,10).until(
           EC.presence_of_element_located((By.XPATH,"//html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[5]/div[1]/a/span[1]/span"))
         ).text
-        with open('selenium_data_found/twitter.txt', 'w', encoding='utf-8') as file:
+        with open('twitter.txt', 'w', encoding='utf-8') as file:
                 file.write("Twitter De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
                 file.write("Seguidores: " + followers+ "\n")
@@ -178,7 +178,7 @@ async def get_info_linkedin(url):
             EC.presence_of_element_located((By.XPATH, "//html/body/main/section[1]/section/div/div[2]/div[1]/h3"))
         ).text
 
-        with open('selenium_data_found/linkedin.txt', 'w', encoding='utf-8') as file:
+        with open('linkedin.txt', 'w', encoding='utf-8') as file:
             file.write("Linkedin De: " + pagina + "\n")
             file.write("Informacion: " + informacion + "\n")
             file.write("tamano: " + tamano + "\n")

@@ -35,7 +35,7 @@ async def get_info_instagram(url):
             seguidores = await page.locator("//html/body/div[2]/div/div/div[2]/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[2]/a/span/span").inner_text()
             publicaciones = await page.locator("//html/body/div[2]/div/div/div[2]/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[1]/span/span").inner_text()
             seguidos = await page.locator("//html/body/div[2]/div/div/div[2]/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[3]/a/span/span").inner_text()
-            with open('playwright_data_found/instagram.txt', 'w', encoding='utf-8') as file:
+            with open('instagram.txt', 'w', encoding='utf-8') as file:
                 file.write("Instagram De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
                 file.write("Publicaciones: " + publicaciones + "\n")
@@ -56,7 +56,7 @@ async def get_info_facebook(url):
            seguidores = await page.locator("//html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[1]/div[2]/div/div/div/div[3]/div/div/div[2]/span/a[2]").inner_text()
            likes = await page.locator("//html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[1]/div[2]/div/div/div/div[3]/div/div/div[2]/span/a[1]").inner_text()
            informacion = await page.locator("//html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[1]/div[2]/div/div[1]/div/div/div/div/div[2]/div[1]/div/div/span").inner_html()         
-           with open('playwright_data_found/facebook.txt', 'w', encoding='utf-8') as file:
+           with open('facebook.txt', 'w', encoding='utf-8') as file:
                 file.write("Facebook De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
                 file.write("likes: " + likes + "\n")
@@ -81,7 +81,7 @@ async def get_info_twitter(url):
             informacion = await page.locator("//html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[3]/div/div[1]/span").inner_text()
             seguidores = await page.locator("//html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[5]/div[2]/a/span[1]/span").inner_text()
             seguidos = await page.locator("//html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[5]/div[1]/a/span[1]/span").inner_text()
-            with open('playwright_data_found/twitter.txt', 'w', encoding='utf-8') as file:
+            with open('twitter.txt', 'w', encoding='utf-8') as file:
                   file.write("Twiter De: " + pagina + "\n")
                   file.write("Informacion: " + informacion + "\n")
                   file.write("Seguidores: " + seguidores + "\n")
@@ -101,7 +101,7 @@ async def get_info_linkedin(url):
             informacion = await page.locator("//html/body/main/section[1]/section/div/div[2]/div[1]/h2").inner_text()
             tamaño = await page.locator("//html/body/main/section[1]/div/section[1]/div/dl/div[3]/dd").inner_text()
             seguidores= await page.locator("//html/body/main/section[1]/section/div/div[2]/div[1]/h3").inner_text()
-            with open('playwright_data_found/linkendin.txt', 'w', encoding='utf-8') as file:
+            with open('linkendin.txt', 'w', encoding='utf-8') as file:
                   file.write("Linkendin De: " + pagina + "\n")
                   file.write("Informacion: " + informacion + "\n")
                   file.write("Seguidores: " + seguidores + "\n")
