@@ -10,13 +10,16 @@ function App() {
   };
 
   const handleButtonClick = () => {
-    const url = 'http://localhost:5000/api/social-media-info';
+    const url = 'http://localhost:5000/api/domain-social-info';
+    const jsonData= {
+      "url": inputValue
+    }
     const params = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(inputValue)
+        body: JSON.stringify(jsonData)
     };
     return fetch(url, params)
         .then(response => response.json())
