@@ -10,21 +10,40 @@ function App() {
   };
 
   const handleButtonClick = () => {
-    const url = 'http://localhost:5000/api/domain-social-info';
-    const jsonData= {
-      "url": inputValue
-    }
-    const params = {
+    const fetchData = async (url) => {
+      const jsonData = {
+        "url": inputValue
+      };
+
+      const params = {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(jsonData)
+      };
+
+      try {
+        const response = await fetch(url, params);
+        return await response.json();
+      } catch (error) {
+        return console.error('Error:', error);
+      }
     };
-    return fetch(url, params)
-        .then(response => response.json())
-        .then(data => data)
-        .catch(error => console.error('Error:', error));
+
+    // Lista de URLs que deseas consultar
+    const urls = ['http://localhost:5000/api/domain-social-info', 'http://localhost:5001/api/domain-social-info'];
+
+    // Realizar solicitudes en paralelo
+    Promise.all(urls.map(url => fetchData(url)))
+      .then(dataArray => {
+        // Aquí dataArray contiene los resultados de ambas solicitudes
+        const result1 = dataArray[0];
+        const result2 = dataArray[1];
+        console.log('Resultado 1:', result1);
+        console.log('Resultado 2:', result2);
+      })
+      .catch(error => console.error('Error en alguna de las solicitudes:', error));
   };
 
   return (
