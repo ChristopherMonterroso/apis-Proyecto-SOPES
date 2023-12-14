@@ -2,9 +2,10 @@
 from flask import Blueprint, request, jsonify
 import asyncio
 from scraping import get_social_media_links
+from flask_cors import CORS
 
 api_blueprint = Blueprint('api', __name__)
-
+CORS(api_blueprint, resources={r"/api/*": {"origins": "*"}})
 @api_blueprint.route('/domain-social-info', methods=['GET'])
 def get_social_media():
     if request.method == 'GET':
