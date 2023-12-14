@@ -1,5 +1,5 @@
 from selenium import webdriver
-
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -23,7 +23,13 @@ async def run(instagram_url:str, facebook_url:str, twitter_url:str, linkedin_url
 async def get_info_instagram(url):
     # Set up the Chrome browser
     options = webdriver.ChromeOptions()
-    options.headless = False  # Set to True if you don't want to see the browser window
+    
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--start-maximized")
     browser = webdriver.Chrome(options=options)
 
     try:
@@ -56,6 +62,13 @@ async def get_info_instagram(url):
         followed = WebDriverWait(browser,10).until(
           EC.presence_of_element_located((By.XPATH,"//html/body/div[2]/div/div/div[2]/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[3]/a/span/span"))
         ).text
+        print("informacion de instagram")
+        print(pagina)
+        print(informacion)
+        print(posts)
+        print(followers)
+        print(followed)
+        
         with open('instagram.txt', 'w', encoding='utf-8') as file:
                 file.write("Instagram De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
@@ -71,7 +84,12 @@ async def get_info_instagram(url):
 
 async def get_info_facebook(url):
     options = webdriver.ChromeOptions()
-    options.headless = False  # Set to True if you don't want to see the browser window
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--start-maximized")
     browser = webdriver.Chrome( options=options)
 
     try:
@@ -93,7 +111,11 @@ async def get_info_facebook(url):
         informacion = WebDriverWait(browser, 10).until(
             EC.presence_of_element_located((By.XPATH, "//html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[1]/div[2]/div/div[1]/div/div/div/div/div[2]/div[1]/div/div/span"))
         ).get_attribute('innerHTML')
-
+        print("informacion de facebook")
+        print(pagina)
+        print(informacion)
+        print(likes)
+        print(seguidores)
         with open('facebook.txt', 'w', encoding='utf-8') as file:
             file.write("Facebook De: " + pagina + "\n")
             file.write("Informacion: " + informacion + "\n")
@@ -109,7 +131,12 @@ async def get_info_facebook(url):
 async def get_info_twitter(url):
     # Set up the Chrome browser
     options = webdriver.ChromeOptions()
-    options.headless = False  # Set to True if you don't want to see the browser window
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--start-maximized")
     browser = webdriver.Chrome(options=options)
 
     try:
@@ -142,6 +169,11 @@ async def get_info_twitter(url):
         followed = WebDriverWait(browser,10).until(
           EC.presence_of_element_located((By.XPATH,"//html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[5]/div[1]/a/span[1]/span"))
         ).text
+        print("informacion de twitter")
+        print(pagina)
+        print(informacion)
+        print(followers)
+        print(followed)
         with open('twitter.txt', 'w', encoding='utf-8') as file:
                 file.write("Twitter De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
@@ -156,7 +188,12 @@ async def get_info_twitter(url):
 
 async def get_info_linkedin(url):
     options = webdriver.ChromeOptions()
-    options.headless = False  # Set to True if you don't want to see the browser window
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--start-maximized")
     browser = webdriver.Chrome( options=options)
 
     try:
@@ -178,7 +215,11 @@ async def get_info_linkedin(url):
         seguidores = WebDriverWait(browser, 10).until(
             EC.presence_of_element_located((By.XPATH, "//html/body/main/section[1]/section/div/div[2]/div[1]/h3"))
         ).text
-
+        print("informacion de linkedin")
+        print(pagina)
+        print(informacion)
+        print(tamano)
+        print(seguidores)
         with open('linkedin.txt', 'w', encoding='utf-8') as file:
             file.write("Linkedin De: " + pagina + "\n")
             file.write("Informacion: " + informacion + "\n")

@@ -1,26 +1,15 @@
-FROM alpine:3.10
-
-# Install packages para trabajar con selenium flask python
-RUN apk add --no-cache python3-dev \
-    && pip3 install --upgrade pip 
-
-RUN apk --no-cache add \
-    wget \
-    unzip \
-    chromium
-
-# Descargar y descomprimir Chromedriver
-RUN wget https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/120.0.6099.71/linux64/chromedriver-linux64.zip  \
-&& unzip chromedriver-linux64.zip 
-  
-
-# Mover Chromedriver al directorio en el PATH
-RUN mv chromedriver-linux64 /usr/local/bin/
-#actualizar chromedriver
+FROM alpine:3.19.0
 
 
-# Configura Chromedriver en PATH
-ENV PATH="/usr/lib/chromium/chromedriver:${PATH}"
+RUN apk add --no-cache python3-dev py3-pip
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
+RUN pip3 install --upgrade pip
+
+RUN apk add chromium 
+RUN apk add chromium-chromedriver
+
+RUN chromedriver --version
 
 WORKDIR /Selenium_api
 
@@ -36,6 +25,14 @@ RUN pip3 install --upgrade pip
 # RUN pip3 install playwright
 RUN pip3 install selenium
 RUN pip3 install --upgrade Flask Jinja2
+
+
+
+
+# Descargar el chromedriver
+
+
+
 
 #ejecutar dentro de Selenium_api main.py
 CMD ["python3", "api_selenium/main.py"]
