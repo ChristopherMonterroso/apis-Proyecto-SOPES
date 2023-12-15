@@ -1,22 +1,28 @@
 import asyncio
 from playwright.async_api import async_playwright
-
-async def run(instagram_url,facebook_url,  twitter_url, linkedin_url):
+from playwright._impl._errors import TargetClosedError
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+async def run(instagram_url, facebook_url, twitter_url, linkedin_url):
     tasks = []
-
-    if facebook_url!="":
-        tasks.append(asyncio.create_task(get_info_facebook(facebook_url)))
+    error_report = []
+    if facebook_url != "":
+        tasks.append(asyncio.create_task(get_info_with_retry(get_info_facebook, facebook_url, error_report)))
     if instagram_url!="":
-        tasks.append(asyncio.create_task(get_info_instagram(instagram_url)))
+        tasks.append(asyncio.create_task(get_info_with_retry(get_info_instagram, instagram_url, error_report)))
     if twitter_url!="":
-        tasks.append(asyncio.create_task(get_info_twitter(twitter_url)))
+        tasks.append(asyncio.create_task(get_info_with_retry(get_info_twitter, twitter_url, error_report)))
     if linkedin_url!="":
-        tasks.append(asyncio.create_task(get_info_linkedin(linkedin_url)))
-
+        tasks.append(asyncio.create_task(get_info_with_retry(get_info_linkedin, linkedin_url, error_report)))
     await asyncio.gather(*tasks)
+    generate_error_report_pdf(error_report)
+    send_email("Playwright_error_report.pdf", "chrismonc08@gmail.com") 
 
-
-    
 async def get_info_instagram(url):
     
     async with async_playwright() as p:
@@ -41,10 +47,13 @@ async def get_info_instagram(url):
                 file.write("Publicaciones: " + publicaciones + "\n")
                 file.write("Seguidores: " + seguidores + "\n")
                 file.write("Seguidos: " + seguidos + "\n")
-        except Exception as e:
-            print(f"Error: {e}")
+
         finally:
-            await browser.close()
+            if browser:
+                # Cerrar la página antes de cerrar el navegador
+                await page.close()
+                # Cerrar el navegador
+                await browser.close()
 
 async def get_info_facebook(url):
     async with async_playwright() as p:
@@ -61,10 +70,14 @@ async def get_info_facebook(url):
                 file.write("Informacion: " + informacion + "\n")
                 file.write("likes: " + likes + "\n")
                 file.write("Seguidores: " + seguidores + "\n")
-        except Exception as e:
-            print(f"Error: {e}")
         finally:
-            await browser.close()
+            if browser:
+                # Cerrar la página antes de cerrar el navegador
+                await page.close()
+                # Cerrar el navegador
+                await browser.close()
+
+
 
 async def get_info_twitter(url):
      async with async_playwright() as p:
@@ -86,10 +99,13 @@ async def get_info_twitter(url):
                   file.write("Informacion: " + informacion + "\n")
                   file.write("Seguidores: " + seguidores + "\n")
                   file.write("Seguidos: " + seguidos + "\n")
-        except Exception as e:
-            print(f"Error: {e}")
+
         finally:
-            await browser.close()
+            if browser:
+                # Cerrar la página antes de cerrar el navegador
+                await page.close()
+                # Cerrar el navegador
+                await browser.close()
     
 async def get_info_linkedin(url):
      async with async_playwright() as p:
@@ -106,10 +122,107 @@ async def get_info_linkedin(url):
                   file.write("Informacion: " + informacion + "\n")
                   file.write("Seguidores: " + seguidores + "\n")
                   file.write("Tamaño: " + tamaño + "\n")
-        except Exception as e:
-            print(f"Error: {e}")
         finally:
-            await browser.close()
+            if browser:
+                # Cerrar la página antes de cerrar el navegador
+                await page.close()
+                # Cerrar el navegador
+                await browser.close()
+async def get_info_with_retry(get_info_function, url, error_report, max_retries=3, timeout=30):
+    for retry in range(1, max_retries + 1):
+        try:
+            await asyncio.wait_for(get_info_function(url), timeout=timeout)
+
+            # Si la función se ejecuta sin errores dentro del límite de tiempo, salir del bucle
+            break
+        except asyncio.TimeoutError:
+            network = get_info_function.__name__.replace("get_info_", "").capitalize()
+            add_error_to_report(error_report, network, f"Tiempo de espera agotado - Intento {retry}/{max_retries}")
+            if retry == max_retries:
+                print("Se alcanzó el número máximo de intentos.")
+                break
+            else:
+                print("Reintentando...")
+        except TargetClosedError as s:
+            network = get_info_function.__name__.replace("get_info_", "").capitalize()
+            add_error_to_report(error_report, network, f"El objetivo se cerró durante - Intento {retry}/{max_retries}")
+            if retry == max_retries:
+                print("Se alcanzó el número máximo de intentos.")
+                break
+            else:
+                print("Reintentando...")
+                await asyncio.sleep(2)
+        except Exception as e:
+            network = get_info_function.__name__.replace("get_info_", "").capitalize()
+            add_error_to_report(error_report, network, f"Error - Intento {retry}/{max_retries}: {e}")
+            if retry == max_retries:
+                add_error_to_report(error_report, get_info_function.__name__, f"Se alcanzó el número máximo de intentos.")
+                break
+            else:
+                print("Reintentando...")
+
+def add_error_to_report(error_report, social_network, description):
+   error_report.append({
+        'Social Network': social_network,
+        'Description': description,
+        'Attempts': len(error_report) + 1  # Intentos hasta ahora
+    })
+
+def generate_error_report_pdf(error_report):
+    pdf_filename = "Playwright_error_report.pdf"
+    try:
+        doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+        elements = []
+        # Encabezado de la tabla
+        table_data = [["Red social", "Descripción del error", "Intentos"]]
+
+        # Datos de la tabla
+        for error in error_report:
+            table_data.append([error['Social Network'], error['Description'], error['Attempts']])
+
+        # Crear la tabla y aplicar estilo
+        table = Table(table_data)
+        style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                            ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+
+        table.setStyle(style)
+        elements.append(table)
+
+        # Construir el PDF
+        doc.build(elements)
+
+        print(f"Se ha generado el informe de errores en el archivo: {pdf_filename}")
+    except Exception as e:
+        print(f"Error al generar el informe PDF: {e}")
+
+def send_email(pdf_filename, recipient_email):
+    sender_email = "sstmsprtvs@gmail.com"  # Reemplaza con tu dirección de correo electrónico
+    sender_password = "mhgc cpin qdbs mgop"  # Reemplaza con la contraseña de tu correo electrónico
+
+    subject = "Informe de Errores - Playwright"
+    body = "Adjunto encontrarás el informe de errores generado por Playwright."
+
+    # Crear el mensaje
+    message = MIMEMultipart()
+    message.attach(MIMEText(body, "plain"))
+    
+    # Adjuntar el PDF al mensaje
+    with open(pdf_filename, "rb") as pdf_file:
+        attach = MIMEApplication(pdf_file.read(),_subtype="pdf")
+        attach.add_header('Content-Disposition','attachment',filename=str(pdf_filename))
+        message.attach(attach)
+
+    message["Subject"] = subject
+    message["From"] = sender_email
+    message["To"] = recipient_email
+
+    # Establecer la conexión con el servidor SMTP de Gmail
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, recipient_email, message.as_string())
 
 if __name__ == "__main__":
-    asyncio.run(run('https://www.instagram.com/eltallerdetephy.gt/','','',''))
+    asyncio.run(run('','http://www.facebook.com/kemgt/','',''))
