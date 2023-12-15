@@ -7,6 +7,7 @@ api_blueprint = Blueprint('api', __name__)
 CORS(api_blueprint, resources={r"/*": {"origins": "*"}})
 @api_blueprint.route('/domain-social-info', methods=['POST'])
 def get_social_media():
+    print("Iniciando Selenium")
     if request.method == 'POST':
         data = request.get_json()
         url = data.get('url')
@@ -17,3 +18,9 @@ def get_social_media():
             return jsonify({"social_media_links": social_media_links})
         except Exception as e:
             return jsonify({"error": str(e)}), 500
+        
+@api_blueprint.route('/', methods=['GET'])
+def prueba():
+    print("si viene aqui")
+   #retornar un h1
+    return "<h1>Prueba</h1>"

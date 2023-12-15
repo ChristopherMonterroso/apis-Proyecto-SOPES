@@ -1,15 +1,23 @@
+import json
+import asyncio
+import time
+import smtplib
+import redis
 from selenium import webdriver
+from concurrent.futures import ThreadPoolExecutor
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
-import asyncio
-import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+redis_host = '192.168.1.41'
+redis_port = 8000
+redis_db = 0
 
 async def run(instagram_url:str, facebook_url:str, twitter_url:str, linkedin_url:str):
     tasks = []
@@ -30,7 +38,13 @@ async def run(instagram_url:str, facebook_url:str, twitter_url:str, linkedin_url
 async def get_info_instagram(url):
     # Set up the Chrome browser
     options = webdriver.ChromeOptions()
-    options.headless = False  # Set to True if you don't want to see the browser window
+    
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--start-maximized")
     browser = webdriver.Chrome(options=options)
 
     try:
@@ -63,6 +77,13 @@ async def get_info_instagram(url):
         followed = WebDriverWait(browser,10).until(
           EC.presence_of_element_located((By.XPATH,"//html/body/div[2]/div/div/div[2]/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[3]/a/span/span"))
         ).text
+        print("informacion de instagram")
+        print(pagina)
+        print(informacion)
+        print(posts)
+        print(followers)
+        print(followed)
+        await save_to_redis(pagina, informacion, posts, followers, followed)
         with open('instagram.txt', 'w', encoding='utf-8') as file:
                 file.write("Instagram De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
@@ -75,7 +96,12 @@ async def get_info_instagram(url):
 
 async def get_info_facebook(url):
     options = webdriver.ChromeOptions()
-    options.headless = False  # Set to True if you don't want to see the browser window
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--start-maximized")
     browser = webdriver.Chrome( options=options)
 
     try:
@@ -97,12 +123,20 @@ async def get_info_facebook(url):
         informacion = WebDriverWait(browser, 10).until(
             EC.presence_of_element_located((By.XPATH, "//html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[1]/div[2]/div/div[1]/div/div/div/div/div[2]/div[1]/div/div/span"))
         ).get_attribute('innerHTML')
-
+        print("informacion de facebook")
+        print(pagina)
+        print(informacion)
+        print(likes)
+        print(seguidores)
+        await save_to_redis(pagina, informacion, likes, seguidores, "vacio")
         with open('facebook.txt', 'w', encoding='utf-8') as file:
             file.write("Facebook De: " + pagina + "\n")
             file.write("Informacion: " + informacion + "\n")
             file.write("likes: " + likes + "\n")
             file.write("Seguidores: " + seguidores + "\n")
+
+    except Exception as e:
+        print(f"Error: {e}")
 
     finally:
         browser.quit()
@@ -110,7 +144,12 @@ async def get_info_facebook(url):
 async def get_info_twitter(url):
     # Set up the Chrome browser
     options = webdriver.ChromeOptions()
-    options.headless = False  # Set to True if you don't want to see the browser window
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--start-maximized")
     browser = webdriver.Chrome(options=options)
 
     try:
@@ -143,11 +182,18 @@ async def get_info_twitter(url):
         followed = WebDriverWait(browser,10).until(
           EC.presence_of_element_located((By.XPATH,"//html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[5]/div[1]/a/span[1]/span"))
         ).text
+        print("informacion de twitter")
+        print(pagina)
+        print(informacion)
+        print(followers)
+        print(followed)
         with open('twitter.txt', 'w', encoding='utf-8') as file:
                 file.write("Twitter De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
                 file.write("Seguidores: " + followers+ "\n")
                 file.write("Seguidos: " + followed + "\n")
+    except Exception as e:
+        print(f"Error: {e}")
 
     finally:
         # Close the browser
@@ -155,7 +201,12 @@ async def get_info_twitter(url):
 
 async def get_info_linkedin(url):
     options = webdriver.ChromeOptions()
-    options.headless = False  # Set to True if you don't want to see the browser window
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--start-maximized")
     browser = webdriver.Chrome( options=options)
 
     try:
@@ -177,16 +228,84 @@ async def get_info_linkedin(url):
         seguidores = WebDriverWait(browser, 10).until(
             EC.presence_of_element_located((By.XPATH, "//html/body/main/section[1]/section/div/div[2]/div[1]/h3"))
         ).text
-
+        print("informacion de linkedin")
+        print(pagina)
+        print(informacion)
+        print(tamano)
+        print(seguidores)
         with open('linkedin.txt', 'w', encoding='utf-8') as file:
             file.write("Linkedin De: " + pagina + "\n")
             file.write("Informacion: " + informacion + "\n")
             file.write("tamano: " + tamano + "\n")
             file.write("Seguidores: " + seguidores + "\n")
 
+    except Exception as e:
+        print(f"Error: {e}")
 
     finally:
         browser.quit()
+async def save_to_redis(pagina, informacion, posts, followers, followed):
+    try:
+        lista_datos = []
+        #convertir dato a string
+        pagina = str(pagina)
+        informacion = str(informacion)
+        posts = str(posts)
+        followers = str(followers)
+        followed = str(followed)
+        data = {
+        'pagina': pagina,
+        'informacion': informacion,
+        'posts': posts,
+        'followers': followers,
+        'followed': followed
+    }
+        lista_datos.append(data)
+        segundo = time.time()
+        
+        
+        data_to_insert= [
+         {'key': str(segundo),
+             'value': json.dumps(lista_datos),
+        # 'informacion': informacion,
+        # 'posts': posts,
+        # 'followers': followers,
+        # 'followed': followed
+            },
+           
+]
+        
+        # Conecta a Redis
+      
+        with ThreadPoolExecutor(max_workers=2) as executor:
+    # Ejecutar las operaciones de inserción en Redis de manera paralela
+            futures_insert = [executor.submit(insert_data_into_redis, data) for data in data_to_insert]
+
+    # Esperar a que todas las operaciones de inserción se completen
+            for future in futures_insert:
+                future.result()
+        
+        
+    except Exception as e:
+        print(f"Error al almacenar en Redis: {e}")
+        
+def insert_data_into_redis(data):
+    key = data['key']
+    value = data['value']
+    # informacion = data['informacion']
+    # posts = data['posts']
+    # followers = data['followers']
+    # followed = data['followed']
+    # Crear una conexión a Redis
+    r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db)
+
+    try:
+        # Ingresar datos en Redis
+        r.set(key,value)
+        print(f'{value} insertado en Redis correctamente')
+ 
+    except Exception as e:
+        print(f'Error al insertar {value} en Redis: {e}')
 
 async def get_info_with_retry(get_info_function, url, error_report, max_retries=3, timeout=30):
     for retry in range(1, max_retries + 1):
@@ -274,9 +393,3 @@ def send_email(pdf_filename, recipient_email):
         server.starttls()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, recipient_email, message.as_string())
-
-
-if __name__ == "__main__":
-    #asyncio.run(run('','http://www.facebook.com/kemgt/','',''))
-    pdf_filename = "Selenium_error_report.pdf"
-    send_email(pdf_filename, "chrismonc08@gmail.com")

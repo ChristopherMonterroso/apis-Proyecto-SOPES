@@ -1,0 +1,42 @@
+FROM ubuntu:20.04
+
+# Instalar dependencias necesarias
+RUN apt-get update && apt-get install -y --no-install-recommends \
+   libglib2.0-0
+RUN apt-get install -y --no-install-recommends python3 
+RUN apt-get install -y --no-install-recommends python3-pip 
+RUN apt-get install -y --no-install-recommends chromium-browser
+# RUN apt-get install -y --no-install-recommends chromium
+# RUN apt-get install -y chromium-chromedriver
+
+RUN rm -rf /var/lib/apt/lists/*
+
+# Actualizar pip
+RUN python3 -m pip install --upgrade pip
+
+
+
+# Directorio de trabajo
+WORKDIR /Playwright_api
+
+# Copiar archivos
+COPY api_playwright api_playwright
+#mover el archivo chromedriver al path desde chromedriver-linux64
+#ir a api_playwright y ejecutar python3 main.py
+WORKDIR /Playwright_api/api_playwright/chromedriver-linux64
+RUN mv chromedriver /usr/local/bin
+WORKDIR /Playwright_api
+COPY requirements.txt requirements.txt
+
+# Instalar dependencias de Python
+RUN pip3 install -r requirements.txt
+
+# # Instalar Playwright, Selenium, Flask, Jinja2 u otras dependencias según sea necesario
+RUN pip3 install --upgrade selenium Flask Jinja2
+RUN pip3 install --upgrade playwright
+RUN playwright install
+# RUN apt-get -y --no-install-recommends install playwright
+
+
+# Comando para ejecutar tu aplicación
+CMD ["python3", "api_playwright/main.py"]

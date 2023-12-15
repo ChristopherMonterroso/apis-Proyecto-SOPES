@@ -26,7 +26,12 @@ async def run(instagram_url, facebook_url, twitter_url, linkedin_url):
 async def get_info_instagram(url):
     
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, slow_mo=50)
+        browser = await p.chromium.launch(
+            headless=False,
+            slow_mo=50,
+            args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer']
+        )
+       
         page = await browser.new_page()
         try:
             await page.goto('https://www.instagram.com/accounts/login/')
@@ -56,8 +61,13 @@ async def get_info_instagram(url):
                 await browser.close()
 
 async def get_info_facebook(url):
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, slow_mo=50)
+   async with async_playwright() as p:
+        browser = await p.chromium.launch(
+            headless=False,
+            slow_mo=50,
+            args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer']
+        )
+        print("va bien en twitter")
         page = await browser.new_page()
         try:
            await page.goto(url)
@@ -81,7 +91,7 @@ async def get_info_facebook(url):
 
 async def get_info_twitter(url):
      async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, slow_mo=50)
+        browser = await p.chrome.launch(headless=False, slow_mo=50,args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer'])
         page = await browser.new_page()
         try:
             await page.goto('https://twitter.com/i/flow/login')
@@ -108,8 +118,8 @@ async def get_info_twitter(url):
                 await browser.close()
     
 async def get_info_linkedin(url):
-     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, slow_mo=50)
+    async with async_playwright() as p:
+        browser = await p.chrome.launch(headless=False, slow_mo=50,args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer'])
         page = await browser.new_page()
         try:
             await page.goto(url)
