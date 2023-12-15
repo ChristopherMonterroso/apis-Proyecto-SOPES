@@ -32,7 +32,7 @@ function App() {
     };
 
     // Lista de URLs que deseas consultar
-    const urls = ['http://localhost:5001/api/domain-social-info', 'http://127.0.0.1:7001/api/domain-social-info'];
+    const urls = ['http://localhost:5000/api/domain-social-info', 'http://127.0.0.1:7001/api/domain-social-info'];
 
     // Realizar solicitudes en paralelo
     Promise.all(urls.map(url => fetchData(url)))

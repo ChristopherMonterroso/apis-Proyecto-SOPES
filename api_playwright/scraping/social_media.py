@@ -24,7 +24,7 @@ def get_social_media_links(url):
             elements = driver.find_elements(By.XPATH, f"//a[contains(@href, '{platform}')]")
             for element in elements:
                 social_media_links.append(element.get_attribute("href"))
-        print("va comenzar a buscar")
+        print(social_media_links)
         if len(social_media_links) == 0:
             return "No social media links found"
         if len(social_media_links) == 1:
