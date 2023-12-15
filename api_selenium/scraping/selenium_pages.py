@@ -1,9 +1,16 @@
+import json
 from selenium import webdriver
+from concurrent.futures import ThreadPoolExecutor
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+import redis
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import asyncio
+import time
+redis_host = '192.168.1.41'
+redis_port = 8000
+redis_db = 0
 
 async def run(instagram_url:str, facebook_url:str, twitter_url:str, linkedin_url:str):
     tasks = []
@@ -68,7 +75,7 @@ async def get_info_instagram(url):
         print(posts)
         print(followers)
         print(followed)
-        
+        await save_to_redis(pagina, informacion, posts, followers, followed)
         with open('instagram.txt', 'w', encoding='utf-8') as file:
                 file.write("Instagram De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
@@ -116,6 +123,7 @@ async def get_info_facebook(url):
         print(informacion)
         print(likes)
         print(seguidores)
+        await save_to_redis(pagina, informacion, likes, seguidores, "vacio")
         with open('facebook.txt', 'w', encoding='utf-8') as file:
             file.write("Facebook De: " + pagina + "\n")
             file.write("Informacion: " + informacion + "\n")
@@ -231,6 +239,69 @@ async def get_info_linkedin(url):
 
     finally:
         browser.quit()
+async def save_to_redis(pagina, informacion, posts, followers, followed):
+    try:
+        lista_datos = []
+        #convertir dato a string
+        pagina = str(pagina)
+        informacion = str(informacion)
+        posts = str(posts)
+        followers = str(followers)
+        followed = str(followed)
+        data = {
+        'pagina': pagina,
+        'informacion': informacion,
+        'posts': posts,
+        'followers': followers,
+        'followed': followed
+    }
+        lista_datos.append(data)
+        segundo = time.time()
+        
+        
+        data_to_insert= [
+         {'key': str(segundo),
+             'value': json.dumps(lista_datos),
+        # 'informacion': informacion,
+        # 'posts': posts,
+        # 'followers': followers,
+        # 'followed': followed
+            },
+           
+]
+        
+        # Conecta a Redis
+      
+        with ThreadPoolExecutor(max_workers=2) as executor:
+    # Ejecutar las operaciones de inserción en Redis de manera paralela
+            futures_insert = [executor.submit(insert_data_into_redis, data) for data in data_to_insert]
+
+    # Esperar a que todas las operaciones de inserción se completen
+            for future in futures_insert:
+                future.result()
+        
+        
+    except Exception as e:
+        print(f"Error al almacenar en Redis: {e}")
+        
+def insert_data_into_redis(data):
+    key = data['key']
+    value = data['value']
+    # informacion = data['informacion']
+    # posts = data['posts']
+    # followers = data['followers']
+    # followed = data['followed']
+    # Crear una conexión a Redis
+    r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db)
+
+    try:
+        # Ingresar datos en Redis
+        r.set(key,value)
+        print(f'{value} insertado en Redis correctamente')
+ 
+    except Exception as e:
+        print(f'Error al insertar {value} en Redis: {e}')
+        
 
 if __name__ == "__main__":
     asyncio.run(run('https://www.instagram.com/eltallerdetephy.gt/','','',''))

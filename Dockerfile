@@ -25,6 +25,9 @@ RUN pip3 install --upgrade pip
 # RUN pip3 install playwright
 RUN pip3 install selenium
 RUN pip3 install --upgrade Flask Jinja2
+RUN pip install redis
 
+# RUN playwright install
+# RUN pip3 install playwright
 #ejecutar dentro de Selenium_api main.py
 CMD ["python3", "api_selenium/main.py"]

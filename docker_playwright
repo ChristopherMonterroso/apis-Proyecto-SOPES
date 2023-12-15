@@ -1,9 +1,11 @@
-FROM mcr.microsoft.com/playwright
+FROM ubuntu:20.04
 
 # Instalar dependencias necesarias
-RUN apt-get update 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+   libglib2.0-0
 RUN apt-get install -y --no-install-recommends python3 
 RUN apt-get install -y --no-install-recommends python3-pip 
+RUN apt-get install -y --no-install-recommends chromium-browser
 # RUN apt-get install -y --no-install-recommends chromium
 # RUN apt-get install -y chromium-chromedriver
 
@@ -30,7 +32,8 @@ COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
 # # Instalar Playwright, Selenium, Flask, Jinja2 u otras dependencias según sea necesario
-RUN pip3 install --upgrade playwright selenium Flask Jinja2
+RUN pip3 install --upgrade selenium Flask Jinja2
+RUN pip3 install --upgrade playwright
 RUN playwright install
 # RUN apt-get -y --no-install-recommends install playwright
 
