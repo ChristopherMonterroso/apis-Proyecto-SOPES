@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM mcr.microsoft.com/playwright:v1.40.0-jammy
 
 # Instalar dependencias necesarias
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -35,6 +35,7 @@ RUN pip3 install -r requirements.txt
 RUN pip3 install --upgrade selenium Flask Jinja2
 RUN pip3 install --upgrade playwright
 RUN playwright install
+RUN pip3 install redis
 RUN pip3 install reportlab
 # RUN apt-get -y --no-install-recommends install playwright
 

@@ -19,6 +19,9 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
 pdf_content = "Reporte_Playwright.pdf"
 pdf = SimpleDocTemplate(pdf_content, pagesize=letter)
+col_widths2 = [pdf.width / 3.0] * 3
+        # Crear la tabla y aplicar estilo
+
 content = []
 redis_host = '192.168.1.41'
 redis_port = 8000
@@ -37,15 +40,19 @@ async def run(instagram_url, facebook_url, twitter_url, linkedin_url):
     await asyncio.gather(*tasks)
     generate_error_report_pdf(error_report)
     send_email("Playwright_error_report.pdf", "garciajonatan56@gmail.com") 
-
+    pdf.build(content)
+    print("Se ha generado el informe en el archivo: Reporte_playwright.pdf")
+    send_email_report("Reporte_Playwright.pdf", "garciajonatan56@gmail.com")
 async def get_info_instagram(url):
     
     async with async_playwright() as p:
+        print("va bien en instagram")
         browser = await p.chromium.launch(
             headless=False,
             slow_mo=50,
             args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer']
         )
+        print("va bien en instagram 2")
        
         page = await browser.new_page()
         try:
@@ -196,6 +203,7 @@ async def get_info_with_retry(get_info_function, url, error_report, max_retries=
                 print("Se alcanzó el número máximo de intentos.")
                 break
             else:
+              
                 print("Reintentando...")
         except TargetClosedError as s:
             network = get_info_function.__name__.replace("get_info_", "").capitalize()
@@ -205,6 +213,8 @@ async def get_info_with_retry(get_info_function, url, error_report, max_retries=
                 break
             else:
                 print("Reintentando...")
+                print("error 1")
+                print(s)
                 await asyncio.sleep(2)
         except Exception as e:
             network = get_info_function.__name__.replace("get_info_", "").capitalize()
@@ -213,7 +223,10 @@ async def get_info_with_retry(get_info_function, url, error_report, max_retries=
                 add_error_to_report(error_report, get_info_function.__name__, f"Se alcanzó el número máximo de intentos.")
                 break
             else:
+                
                 print("Reintentando...")
+                print("eerror2 ")
+                print(e)
 async def save_to_redis(pagina, informacion, posts, followers, followed):
     try:
         lista_datos = []
@@ -273,9 +286,9 @@ def generate_error_report_pdf(error_report):
         # Datos de la tabla
         for error in error_report:
             table_data.append([error['Social Network'], error['Description'], error['Attempts']])
-
+        col_widths = [doc.width / 3.0] * 3
         # Crear la tabla y aplicar estilo
-        table = Table(table_data)
+        table = Table(table_data,colWidths=col_widths)
         style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -321,8 +334,8 @@ def send_email_report(pdf_filename, recipient_email):
     sender_email = "sstmsprtvs@gmail.com"  # Reemplaza con tu dirección de correo electrónico
     sender_password = "mhgc cpin qdbs mgop"  # Reemplaza con la contraseña de tu correo electrónico
 
-    subject = "Informe de Paginas- Selenium"
-    body = "Adjunto encontrarás el informe de paginas generado por Selenium."
+    subject = "Informe de Paginas- Playwright"
+    body = "Adjunto encontrarás el informe de paginas generado por playwright."
 
     # Crear el mensaje
     message = MIMEMultipart()
@@ -349,14 +362,17 @@ def add_text(text):
     content.append(Paragraph(text, styles["Normal"]))
 
 def add_table(data):
-    table = Table(data)
-    style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                        ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+    table = Table(data, colWidths=col_widths2)
+    style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('WORDWRAP', (0, 1), (-1, -1), 'CJK'),
+    ])
     table.setStyle(style)
     content.append(table)
 if __name__ == "__main__":
