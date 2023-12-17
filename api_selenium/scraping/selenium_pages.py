@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle,Spacer
 from reportlab.lib import colors
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -96,9 +96,14 @@ async def get_info_instagram(url):
         print(followed)
         #crear pdf con la informacion
         add_text("Instagram De: " + pagina)
-        data = [["Informacion", "Publicaciones", "Seguidores", "Seguidos"],[
-            informacion, posts, followers, followed]]
-        add_table(data)
+        add_text("Informacion: " + informacion)
+        add_text("Publicaciones: " + posts)
+        add_text("Seguidores: " + followers)
+        add_text("Seguidos: " + followed)
+        add_text("\n")
+        content.append(Spacer(1, 12))  # Espacio vertical
+        
+    
         
         
         await save_to_redis(pagina, informacion, posts, followers, followed)
@@ -149,10 +154,11 @@ async def get_info_facebook(url):
         print(seguidores)
         #crear pdf con la informacion
         add_text("Facebook De: " + pagina)
-        data = [["Informacion", "Likes", "Seguidores"],[
-            informacion, likes, seguidores]]
-        add_table(data)
-        
+        add_text("Informacion: " + informacion)
+        add_text("Likes: " + likes)
+        add_text("Seguidores: " + seguidores)
+        add_text("\n")
+        content.append(Spacer(1, 12))  # Espacio vertical
         await save_to_redis(pagina, informacion, likes, seguidores, "vacio")
         with open('facebook.txt', 'w', encoding='utf-8') as file:
             file.write("Facebook De: " + pagina + "\n")
@@ -214,9 +220,11 @@ async def get_info_twitter(url):
         print(followed)
         #crear pdf con la informacion
         add_text("Twitter De: " + pagina)
-        data = [["Informacion", "Seguidores", "Seguidos"],[
-            informacion, followers, followed]]
-        add_table(data)
+        add_text("Informacion: " + informacion)
+        add_text("Seguidores: " + followers)
+        add_text("Seguidos: " + followed)
+        add_text("\n")
+        content.append(Spacer(1, 12))  # Espacio vertical
         await save_to_redis(pagina, informacion, followers, followed, "vacio")
         with open('twitter.txt', 'w', encoding='utf-8') as file:
                 file.write("Twitter De: " + pagina + "\n")
@@ -266,9 +274,11 @@ async def get_info_linkedin(url):
         print(seguidores)
         #crear pdf con la informacion
         add_text("Linkedin De: " + pagina)
-        data = [["Informacion", "Tamano", "Seguidores"],[
-            informacion, tamano, seguidores]]
-        add_table(data)
+        add_text("Informacion: " + informacion)
+        add_text("Tamano: " + tamano)
+        add_text("Seguidores: " + seguidores)
+        add_text("\n")
+        content.append(Spacer(1, 12))  # Espacio vertical
         await save_to_redis(pagina, informacion, tamano, seguidores, "vacio")
         with open('linkedin.txt', 'w', encoding='utf-8') as file:
             file.write("Linkedin De: " + pagina + "\n")

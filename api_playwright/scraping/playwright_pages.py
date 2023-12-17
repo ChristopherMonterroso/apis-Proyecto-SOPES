@@ -2,7 +2,7 @@ import asyncio
 from playwright.async_api import async_playwright
 from playwright._impl._errors import TargetClosedError
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
 from reportlab.lib import colors
 import smtplib
 import json
@@ -48,7 +48,7 @@ async def get_info_instagram(url):
     async with async_playwright() as p:
         print("va bien en instagram")
         browser = await p.chromium.launch(
-            headless=False,
+            headless=True,
             slow_mo=50,
             args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer']
         )
@@ -69,9 +69,13 @@ async def get_info_instagram(url):
             publicaciones = await page.locator("//html/body/div[2]/div/div/div[2]/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[1]/span/span").inner_text()
             seguidos = await page.locator("//html/body/div[2]/div/div/div[2]/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[3]/a/span/span").inner_text()
             add_text("Instagram De: " + pagina)
-            data = [["Informacion", "Publicaciones", "Seguidores", "Seguidos"],[
-            informacion, publicaciones, seguidores, seguidos]]
-            add_table(data)
+            add_text("Informacion: " + informacion)
+            add_text("Publicaciones: " + publicaciones)
+            add_text("Seguidores: " + seguidores)
+            add_text("Seguidos: " + seguidos)
+            add_text("\n")
+            content.append(Spacer(1, 12))  # Espacio vertical
+
         
         
             await save_to_redis(pagina, informacion, publicaciones, seguidores,seguidos)
@@ -93,7 +97,7 @@ async def get_info_instagram(url):
 async def get_info_facebook(url):
    async with async_playwright() as p:
         browser = await p.chromium.launch(
-            headless=False,
+            headless=True,
             slow_mo=50,
             args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer']
         )
@@ -105,10 +109,13 @@ async def get_info_facebook(url):
            seguidores = await page.locator("//html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[1]/div[2]/div/div/div/div[3]/div/div/div[2]/span/a[2]").inner_text()
            likes = await page.locator("//html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[1]/div[2]/div/div/div/div[3]/div/div/div[2]/span/a[1]").inner_text()
            informacion = await page.locator("//html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div/div/div[4]/div[2]/div/div[1]/div[2]/div/div[1]/div/div/div/div/div[2]/div[1]/div/div/span").inner_html()     
-           add_text("Instagram De: " + pagina)
-           data = [["Informacion", "seguidores", "likes"],[
-           informacion, seguidores, seguidores, likes]]
-           add_table(data)
+           add_text("Facebook De: " + pagina)
+           add_text("Informacion: " + informacion)
+           add_text("Seguidores: " + seguidores)
+           add_text("Likes: " + likes)
+           #salto de linea
+           add_text("\n")
+           content.append(Spacer(1, 12))  # Espacio vertical
         
         
            await save_to_redis(pagina, informacion, likes, seguidores,"vacio")    
@@ -128,7 +135,7 @@ async def get_info_facebook(url):
 
 async def get_info_twitter(url):
      async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, slow_mo=50,args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer'])
+        browser = await p.chromium.launch(headless=True, slow_mo=50,args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer'])
         page = await browser.new_page()
         try:
             await page.goto('https://twitter.com/i/flow/login')
@@ -143,9 +150,13 @@ async def get_info_twitter(url):
             seguidos = await page.locator("//html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[5]/div[1]/a/span[1]/span").inner_text()
             #agregar a pdf
             add_text("Twitter De: " + pagina)
-            data = [["Informacion", "seguidores", "seguidos"],[
-            informacion, seguidores, seguidos]]
-            add_table(data)
+            add_text("Informacion: " + informacion)
+            add_text("Seguidores: " + seguidores)
+            add_text("Seguidos: " + seguidos)
+            add_text("\n")
+            content.append(Spacer(1, 12))  # Espacio vertical
+            
+           
             #agregar a redis
             await save_to_redis(pagina, informacion, seguidores, seguidos,"vacio")
             with open('twitter.txt', 'w', encoding='utf-8') as file:
@@ -163,7 +174,7 @@ async def get_info_twitter(url):
     
 async def get_info_linkedin(url):
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, slow_mo=50,args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer'])
+        browser = await p.chromium.launch(headless=True, slow_mo=50,args=['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer'])
         page = await browser.new_page()
         try:
             await page.goto(url)
@@ -173,9 +184,11 @@ async def get_info_linkedin(url):
             seguidores= await page.locator("//html/body/main/section[1]/section/div/div[2]/div[1]/h3").inner_text()
             #agregar a pdf
             add_text("Linkendin De: " + pagina)
-            data = [["Informacion", "seguidores", "tamaño"],[
-            informacion, seguidores, tamaño]]
-            add_table(data)
+            add_text("Informacion: " + informacion)
+            add_text("Seguidores: " + seguidores)
+            add_text("Tamaño: " + tamaño)
+            add_text("\n")
+            content.append(Spacer(1, 12))  # Espacio vertical
             #agregar a redis
             await save_to_redis(pagina, informacion, seguidores, tamaño,"vacio")
             with open('linkendin.txt', 'w', encoding='utf-8') as file:
