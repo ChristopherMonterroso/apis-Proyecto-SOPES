@@ -11,10 +11,10 @@
 
 ## API - Selenium
 ### Endpoint Configuracion
-![Texto alternativo](Images\selenium.PNG)
+![Texto alternativo](Images\selenium.png)
 ## API - Playwright
 ### Endpoint Configuracion
-![Texto alternativo](Images\play.PNG)
+![Texto alternativo](Images\play.png)
 
 ## Docker - Selenium
 ### Configuracion
