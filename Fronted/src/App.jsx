@@ -1,6 +1,7 @@
 // src/App.js
 import React, { useState } from 'react';
 import './App.css';
+import axios from 'axios';
 
 function App() {
   const [inputValue, setInputValue] = useState('');
@@ -10,40 +11,22 @@ function App() {
   };
 
   const handleButtonClick = () => {
-    const fetchData = async (url) => {
-      const jsonData = {
-        "url": inputValue
-      };
-
-      const params = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(jsonData)
-      };
-
-      try {
-        const response = await fetch(url, params);
-        return await response.json();
-      } catch (error) {
-        return console.error('Error:', error);
-      }
+    const postData = {
+      url: inputValue
     };
-
-    // Lista de URLs que deseas consultar
-    const urls = ['http://localhost:5001/api/domain-social-info', 'http://127.0.0.1:7001/api/domain-social-info'];
-
-    // Realizar solicitudes en paralelo
-    Promise.all(urls.map(url => fetchData(url)))
-      .then(dataArray => {
-        // Aquí dataArray contiene los resultados de ambas solicitudes
-        const result1 = dataArray[0];
-        const result2 = dataArray[1];
-        console.log('Resultado 1:', result1);
-        console.log('Resultado 2:', result2);
-      })
-      .catch(error => console.error('Error en alguna de las solicitudes:', error));
+    // Realizar la solicitud POST con Axios
+    axios.post("http://localhost:8080/api/domain-social-info", postData, {
+      headers: {
+          'Content-Type': 'application/json'
+          // Puedes agregar más encabezados si es necesario
+      }
+    })
+    .then(response => {
+      console.log('Respuesta del servidor:', response.data);
+    })
+    .catch(error => {
+      console.error('Error en la solicitud:', error);
+    });
   };
 
   return (
