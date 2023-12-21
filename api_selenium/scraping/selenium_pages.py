@@ -10,15 +10,22 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle,Spacer
 from reportlab.lib import colors
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
 redis_host = '192.168.1.41'
 redis_port = 8000
 redis_db = 0
-
+pdf_content = "Reporte_Selenium.pdf"
+pdf = SimpleDocTemplate(pdf_content, pagesize=letter)
+content = []
 async def run(instagram_url:str, facebook_url:str, twitter_url:str, linkedin_url:str):
     tasks = []
     error_report = []
@@ -33,7 +40,11 @@ async def run(instagram_url:str, facebook_url:str, twitter_url:str, linkedin_url
 
     await asyncio.gather(*tasks)
     generate_error_report_pdf(error_report)
-    send_email("Selenium_error_report.pdf", "chrismonc08@gmail.com")
+    send_email("Selenium_error_report.pdf", "garciajonatan56@gmail.com")
+    pdf.build(content)
+    print("Se ha generado el informe en el archivo: Reporte_Selenium.pdf")
+    send_email_report("Reporte_Selenium.pdf", "garciajonatan56@gmail.com")
+    
 
 async def get_info_instagram(url):
     # Set up the Chrome browser
@@ -83,7 +94,20 @@ async def get_info_instagram(url):
         print(posts)
         print(followers)
         print(followed)
+        #crear pdf con la informacion
+        add_text("Instagram De: " + pagina)
+        add_text("Informacion: " + informacion)
+        add_text("Publicaciones: " + posts)
+        add_text("Seguidores: " + followers)
+        add_text("Seguidos: " + followed)
+        add_text("\n")
+        content.append(Spacer(1, 12))  # Espacio vertical
+        
+    
+        
+        
         await save_to_redis(pagina, informacion, posts, followers, followed)
+        
         with open('instagram.txt', 'w', encoding='utf-8') as file:
                 file.write("Instagram De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
@@ -128,6 +152,13 @@ async def get_info_facebook(url):
         print(informacion)
         print(likes)
         print(seguidores)
+        #crear pdf con la informacion
+        add_text("Facebook De: " + pagina)
+        add_text("Informacion: " + informacion)
+        add_text("Likes: " + likes)
+        add_text("Seguidores: " + seguidores)
+        add_text("\n")
+        content.append(Spacer(1, 12))  # Espacio vertical
         await save_to_redis(pagina, informacion, likes, seguidores, "vacio")
         with open('facebook.txt', 'w', encoding='utf-8') as file:
             file.write("Facebook De: " + pagina + "\n")
@@ -187,6 +218,14 @@ async def get_info_twitter(url):
         print(informacion)
         print(followers)
         print(followed)
+        #crear pdf con la informacion
+        add_text("Twitter De: " + pagina)
+        add_text("Informacion: " + informacion)
+        add_text("Seguidores: " + followers)
+        add_text("Seguidos: " + followed)
+        add_text("\n")
+        content.append(Spacer(1, 12))  # Espacio vertical
+        await save_to_redis(pagina, informacion, followers, followed, "vacio")
         with open('twitter.txt', 'w', encoding='utf-8') as file:
                 file.write("Twitter De: " + pagina + "\n")
                 file.write("Informacion: " + informacion + "\n")
@@ -233,6 +272,14 @@ async def get_info_linkedin(url):
         print(informacion)
         print(tamano)
         print(seguidores)
+        #crear pdf con la informacion
+        add_text("Linkedin De: " + pagina)
+        add_text("Informacion: " + informacion)
+        add_text("Tamano: " + tamano)
+        add_text("Seguidores: " + seguidores)
+        add_text("\n")
+        content.append(Spacer(1, 12))  # Espacio vertical
+        await save_to_redis(pagina, informacion, tamano, seguidores, "vacio")
         with open('linkedin.txt', 'w', encoding='utf-8') as file:
             file.write("Linkedin De: " + pagina + "\n")
             file.write("Informacion: " + informacion + "\n")
@@ -244,10 +291,10 @@ async def get_info_linkedin(url):
 
     finally:
         browser.quit()
+        
 async def save_to_redis(pagina, informacion, posts, followers, followed):
     try:
         lista_datos = []
-        #convertir dato a string
         pagina = str(pagina)
         informacion = str(informacion)
         posts = str(posts)
@@ -262,48 +309,27 @@ async def save_to_redis(pagina, informacion, posts, followers, followed):
     }
         lista_datos.append(data)
         segundo = time.time()
-        
-        
         data_to_insert= [
          {'key': str(segundo),
              'value': json.dumps(lista_datos),
-        # 'informacion': informacion,
-        # 'posts': posts,
-        # 'followers': followers,
-        # 'followed': followed
             },
-           
-]
-        
-        # Conecta a Redis
-      
+        ]
         with ThreadPoolExecutor(max_workers=2) as executor:
     # Ejecutar las operaciones de inserción en Redis de manera paralela
             futures_insert = [executor.submit(insert_data_into_redis, data) for data in data_to_insert]
-
     # Esperar a que todas las operaciones de inserción se completen
             for future in futures_insert:
                 future.result()
-        
-        
     except Exception as e:
         print(f"Error al almacenar en Redis: {e}")
         
 def insert_data_into_redis(data):
     key = data['key']
     value = data['value']
-    # informacion = data['informacion']
-    # posts = data['posts']
-    # followers = data['followers']
-    # followed = data['followed']
-    # Crear una conexión a Redis
     r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db)
-
     try:
-        # Ingresar datos en Redis
         r.set(key,value)
         print(f'{value} insertado en Redis correctamente')
- 
     except Exception as e:
         print(f'Error al insertar {value} en Redis: {e}')
 
@@ -336,6 +362,7 @@ def add_error_to_report(error_report, social_network, description):
         'Description': description,
         'Attempts': len(error_report) + 1  # Intentos hasta ahora
     })
+
 
 def generate_error_report_pdf(error_report):
     pdf_filename = "Selenium_error_report.pdf"
@@ -393,3 +420,46 @@ def send_email(pdf_filename, recipient_email):
         server.starttls()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, recipient_email, message.as_string())
+        
+def send_email_report(pdf_filename, recipient_email):
+    sender_email = "sstmsprtvs@gmail.com"  # Reemplaza con tu dirección de correo electrónico
+    sender_password = "mhgc cpin qdbs mgop"  # Reemplaza con la contraseña de tu correo electrónico
+
+    subject = "Informe de Paginas- Selenium"
+    body = "Adjunto encontrarás el informe de paginas generado por Selenium."
+
+    # Crear el mensaje
+    message = MIMEMultipart()
+    message.attach(MIMEText(body, "plain"))
+    
+    # Adjuntar el PDF al mensaje
+    with open(pdf_filename, "rb") as pdf_file:
+        attach = MIMEApplication(pdf_file.read(),_subtype="pdf")
+        attach.add_header('Content-Disposition','attachment',filename=str(pdf_filename))
+        message.attach(attach)
+
+    message["Subject"] = subject
+    message["From"] = sender_email
+    message["To"] = recipient_email
+
+    # Establecer la conexión con el servidor SMTP de Gmail
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, recipient_email, message.as_string())
+        
+def add_text(text):
+    styles = getSampleStyleSheet()
+    content.append(Paragraph(text, styles["Normal"]))
+
+def add_table(data):
+    table = Table(data)
+    style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+    table.setStyle(style)
+    content.append(table)

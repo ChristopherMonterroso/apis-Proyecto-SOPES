@@ -26,6 +26,7 @@ RUN pip3 install --upgrade pip
 RUN pip3 install selenium
 RUN pip3 install --upgrade Flask Jinja2
 RUN pip install redis
+RUN pip install reportlab
 
 # RUN playwright install
 # RUN pip3 install playwright
