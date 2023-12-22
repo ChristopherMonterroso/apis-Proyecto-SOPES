@@ -13,7 +13,7 @@ RUN chromedriver --version
 
 WORKDIR /Selenium_api
 
-#copiar solo api_selenium luego 
+#copiar solo api_selenium luego  sudo apt install nginx-core
 COPY api_selenium api_selenium
 #copiar requirements se encuentra en la misma linea que este dockerfile
 COPY requirements.txt requirements.txt
