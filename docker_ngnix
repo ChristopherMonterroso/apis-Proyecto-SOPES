@@ -1,6 +1,8 @@
 FROM alpine:3.19.0
 RUN apk add nginx
+RUN apk add goaccess
 WORKDIR /api_load
 COPY nginx-server nginx-server
+
 COPY nginx-server/conf/nginx.conf /etc/nginx/
 CMD ["nginx", "-g", "daemon off;"]

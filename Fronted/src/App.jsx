@@ -15,18 +15,19 @@ function App() {
       url: inputValue
     };
     // Realizar la solicitud POST con Axios
-    axios.post("http://localhost:9090/api/domain-social-info", postData, {
-      headers: {
-          'Content-Type': 'application/json'
-          // Puedes agregar más encabezados si es necesario
-      }
-    })
-    .then(response => {
-      console.log('Respuesta del servidor:', response.data);
-    })
-    .catch(error => {
-      console.error('Error en la solicitud:', error);
-    });
+    axios.post('http://localhost:8080/api/domain-social-info', postData, {
+    withCredentials: true, // Habilita el envío de cookies y encabezados de autorización
+    headers: {
+        'Content-Type': 'application/json',
+        // Puedes agregar más encabezados si es necesario
+    }
+})
+.then(response => {
+    console.log('Respuesta del servidor:', response.data);
+})
+.catch(error => {
+    console.error('Error en la solicitud:', error);
+});
   };
 
   return (
