@@ -99,7 +99,7 @@ Se ejecuta el siguiente comando una vez instalado
 
 ### Imagenes para ver como fue la concurrencia de cada prueba que se realizo en este caso fueron 2
 
-Primera prueba
+- Primera prueba
 ![Texto alternativo](/Documentacion/Images/Captura3.PNG)
-Segunda prueba
+- Segunda prueba
 ![Texto alternativo](/Documentacion/Images/Captura4.PNG)
