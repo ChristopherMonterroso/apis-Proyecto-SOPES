@@ -1,0 +1,3 @@
+Jonatan Leonel Garcia Arana    202000424   ->   Docker , reporteLoad
+Christopher Iván Monterroso Alegria   201902363  -> LoadBalancer
+Kemel Josué Efraín Ruano Jerónimo  ->  Apache Bench , Concurrencia
