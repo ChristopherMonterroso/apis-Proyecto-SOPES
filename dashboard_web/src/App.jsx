@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-
+import Swal from 'sweetalert2';
 import './App.css';
 const App = () => {
   const [stats_selenium, setStats] = useState(null);
   const [stats_playwright, setStats2] = useState(null);
   const [stats_redis, setStats3] = useState(null);
   const [stats_load_balancer, setStats4] = useState(null);
+  const [error_selenium, setError] = useState(null);
 
 
   const obtenerEstadisticas_selenium = async () => {
@@ -17,6 +18,7 @@ const App = () => {
       setStats(datos);
 
     } catch (error) {
+      setError(error);
       console.error('Error al obtener estadísticas:', error);
     }
   };
@@ -65,17 +67,112 @@ const App = () => {
         body: JSON.stringify({ contenedor: contenedor })
       });
       const datos = await respuesta.json();
-      if (datos.status === 400){
-        alert("El contenedor se inicio correctamente")
-      }else{
-        alert("El contenedor ya esta iniciado")
+      if (datos.status === 400) {
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Contenedor iniciado',
+          text: 'El contenedor se inicio correctamente',
+          confirmButtonText: 'Aceptar',
+          didClose: () => {
+            window.location.reload();
+          }
+        })
+
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Contenedor no iniciado',
+          text: 'El contenedor ya se encuentra iniciado',
+          confirmButtonText: 'Aceptar'
+        })
       }
-     
-      
     } catch (error) {
-      alert("Error al iniciar el contenedor")
+      Swal.fire({
+        icon: 'error',
+        title: 'Contenedor no iniciado',
+        text: 'El contenedor ya se encuentra iniciado',
+        confirmButtonText: 'Aceptar'
+      })
     }
   }
+
+  const ReiniciarContenedor = async (contenedor) => {
+    try {
+      const respuesta = await fetch('http://localhost:8010/container_restart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ contenedor: contenedor })
+      });
+      const datos = await respuesta.json();
+      console.log(datos)
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Contenedor reiniciado',
+        text: 'El contenedor se reinicio correctamente',
+        confirmButtonText: 'Aceptar',
+        didClose: () => {
+          window.location.reload();
+        }
+      })
+
+
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Contenedor no reiniciado',
+        text: 'error al reiniciar el contenedor',
+        confirmButtonText: 'Aceptar'
+      })
+    }
+  }
+
+  const DetenerContendedor = async (contenedor) => {
+    try {
+      const respuesta = await fetch('http://localhost:8010/container_stop', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ contenedor: contenedor })
+      });
+      const datos = await respuesta.json();
+      if (datos.status === 400) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Contenedor No Detenido',
+          text: 'El contenedor ya se encuentra detenido',
+          confirmButtonText: 'Aceptar',
+         
+        })
+      } else {
+        Swal.fire({
+          icon: 'success',
+          title: 'Contenedor Detenido',
+          text: 'El contenedor se detuvo correctamente',
+          confirmButtonText: 'Aceptar',
+          didClose: () => {
+            window.location.reload();
+          }
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Contenedor No Detenido',
+        text: 'error al detener el contenedor',
+        confirmButtonText: 'Aceptar',
+        didClose: () => {
+          window.location.reload();
+        }
+      })
+    }
+  }
+
+
 
 
   useEffect(() => {
@@ -85,7 +182,7 @@ const App = () => {
       obtenerEstadisticas_redis();
       obtenerEstadisticas_load_balancer();
       console.log("Obteniendo estadisticas")
-    }, 10000);
+    }, 5000);
     return () => clearInterval(intervalo);
   }, []);
   return (
@@ -130,12 +227,12 @@ const App = () => {
             </div>
           )}
           <div className="card2">
-          <button className="btn" onClick={() => IniciarContenedor("selenium")}> Inicar Contenedor 
-          </button>
-          <button className="btn" onClick={() => ReiniciarContenedor("selenium")}> Reiniciar Contenedor 
-          </button>
-          <button className="btn" onClick={() => ApagarContenedor("selenium")}> Apagar Contenedor 
-          </button>
+            <button className="btn" onClick={() => IniciarContenedor("selenium")}> Inicar Contenedor
+            </button>
+            <button className="btn" onClick={() => ReiniciarContenedor("selenium")}> Reiniciar Contenedor
+            </button>
+            <button className="btn" onClick={() => DetenerContendedor("selenium")}> Apagar Contenedor
+            </button>
           </div>
           <h2>Estadisticas del Contenedor: Playwright</h2>
           {stats_playwright ? (
@@ -174,12 +271,12 @@ const App = () => {
             </div>
           )}
           <div className="card2">
-          <button className="btn"> Inicar Contenedor
-          </button>
-          <button className="btn"> Reiniciar Contenedor
-          </button>
-          <button className="btn"> Apagar Contenedor
-          </button>
+            <button className="btn" onClick={() => IniciarContenedor("playwright")} > Inicar Contenedor
+            </button>
+            <button className="btn" onClick={() => ReiniciarContenedor("playwright")}> Reiniciar Contenedor
+            </button>
+            <button className="btn" onClick={() => DetenerContendedor("playwright")}> Apagar Contenedor
+            </button>
           </div>
 
           <h2>Estadisticas del Contenedor: Redis</h2>
@@ -219,12 +316,12 @@ const App = () => {
             </div>
           )}
           <div className="card2">
-          <button className="btn"> Inicar Contenedor
-          </button>
-          <button className="btn"> Reiniciar Contenedor
-          </button>
-          <button className="btn"> Apagar Contenedor
-          </button>
+            <button className="btn" onClick={() => IniciarContenedor("redis")}> Inicar Contenedor
+            </button>
+            <button className="btn" onClick={() => ReiniciarContenedor("redis")}> Reiniciar Contenedor
+            </button>
+            <button className="btn" onClick={() => DetenerContendedor("redis")}> Apagar Contenedor
+            </button>
           </div>
 
           <h2>Estadisticas del Contenedor: Load Balancer</h2>
@@ -264,14 +361,14 @@ const App = () => {
             </div>
           )}
           <div className="card2">
-          <button className="btn"> Inicar Contenedor
-          </button>
-          <button className="btn"> Reiniciar Contenedor
-          </button>
-          <button className="btn"> Apagar Contenedor
-          </button>
+            <button className="btn" onClick={() => IniciarContenedor("nginx")}> Inicar Contenedor
+            </button>
+            <button className="btn" onClick={() => ReiniciarContenedor("nginx")}> Reiniciar Contenedor
+            </button>
+            <button className="btn" onClick={() => DetenerContendedor("nginx")}> Apagar Contenedor
+            </button>
           </div>
-          <div><br/></div>
+          <div><br /></div>
 
         </div>
       </div>

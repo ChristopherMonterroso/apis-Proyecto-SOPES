@@ -1,5 +1,6 @@
 from flask import Flask, jsonify,request
 import docker
+import subprocess
 from flask_cors import CORS
 app = Flask(__name__)
 #AGREGAR CORS
@@ -17,6 +18,7 @@ def get_container_stats_selenium():
     cliente_docker = docker.from_env()
     nombre_contenedor = 'selenium'  # Reemplaza con el nombre de tu contenedor
     contenedor = cliente_docker.containers.get(nombre_contenedor)
+    #ver si el contenedor esta corriendo
     estadisticas = contenedor.stats(stream=True, decode=True)
     primera_actualizacion = next(estadisticas)
     estadisticas_memoria = primera_actualizacion['memory_stats']
@@ -39,6 +41,7 @@ def get_container_stats_selenium():
             'limite': f"{convertir_bytes_a_megabytes(estadisticas_memoria['limit']):.2f} ",#MB
             'porcentaje': f"{(estadisticas_memoria['usage'] / estadisticas_memoria['limit']) * 100:.2f}"#%
         },
+        'docker':{'name':'selenium'},
         'almacenamiento': {
             'memory_in': f"{memory_in:.2f} ",#MB
             'memory_out': f"{memory_out:.2f} ",#KB
@@ -71,6 +74,7 @@ def get_container_stats_selenium():
             'limite': f"{convertir_bytes_a_megabytes(estadisticas_memoria['limit']):.2f} ",#MB
             'porcentaje': f"{(estadisticas_memoria['usage'] / estadisticas_memoria['limit']) * 100:.2f}"#%
         },
+        'docker':{'name':'selenium'},
         'almacenamiento': {
             'memory_in': f"0",#MB
             'memory_out': f"0",#KB
@@ -86,36 +90,70 @@ def get_container_stats_selenium():
 
 @app.route('/container_playwright', methods=['GET'])
 def get_container_stats_playwright():
-    print("La solicitud ha sido recibida")
-    cliente_docker = docker.from_env()
-    nombre_contenedor = 'playwright'  # Reemplaza con el nombre de tu contenedor
-    contenedor = cliente_docker.containers.get(nombre_contenedor)
-    estadisticas = contenedor.stats(stream=True, decode=True)
-    primera_actualizacion = next(estadisticas)
-    estadisticas_memoria = primera_actualizacion['memory_stats']
-    estadisticas_almacenamiento = primera_actualizacion['blkio_stats']
-    porcentaje_cpu = primera_actualizacion['cpu_stats']['cpu_usage']['total_usage'] / primera_actualizacion['cpu_stats']['system_cpu_usage'] * 100
-    pids = primera_actualizacion['pids_stats']['current']
-    estadisticas_block_io = primera_actualizacion['blkio_stats']['io_service_bytes_recursive']
-    memory_in = primera_actualizacion['blkio_stats']['io_service_bytes_recursive'][0]['value']
-    memory_out = primera_actualizacion['blkio_stats']['io_service_bytes_recursive'][1]['value']
-    memory_in = convertir_bytes_a_megabytes(memory_in)
-    memory_out = convertir_bytes_a_kilobytes(memory_out)
-    red_in = primera_actualizacion['networks']['eth0']['rx_bytes']
-    red_out = primera_actualizacion['networks']['eth0']['rx_dropped']
-    red_in = convertir_bytes_a_kilobytes(red_in)
-    red_out = convertir_bytes_a_kilobytes(red_out)
-    print(estadisticas)
-    return jsonify({
+    try:
+        print("La solicitud ha sido recibida")
+        cliente_docker = docker.from_env()
+        nombre_contenedor = 'playwright'  # Reemplaza con el nombre de tu contenedor
+        contenedor = cliente_docker.containers.get(nombre_contenedor)
+        estadisticas = contenedor.stats(stream=True, decode=True)
+        primera_actualizacion = next(estadisticas)
+        estadisticas_memoria = primera_actualizacion['memory_stats']
+        estadisticas_almacenamiento = primera_actualizacion['blkio_stats']
+        porcentaje_cpu = primera_actualizacion['cpu_stats']['cpu_usage']['total_usage'] / primera_actualizacion['cpu_stats']['system_cpu_usage'] * 100
+        pids = primera_actualizacion['pids_stats']['current']
+        estadisticas_block_io = primera_actualizacion['blkio_stats']['io_service_bytes_recursive']
+        memory_in = primera_actualizacion['blkio_stats']['io_service_bytes_recursive'][0]['value']
+        memory_out = primera_actualizacion['blkio_stats']['io_service_bytes_recursive'][1]['value']
+        memory_in = convertir_bytes_a_megabytes(memory_in)
+        memory_out = convertir_bytes_a_kilobytes(memory_out)
+        red_in = primera_actualizacion['networks']['eth0']['rx_bytes']
+        red_out = primera_actualizacion['networks']['eth0']['rx_dropped']
+        red_in = convertir_bytes_a_kilobytes(red_in)
+        red_out = convertir_bytes_a_kilobytes(red_out)
+        print(estadisticas)
+        return jsonify({
+            'ram': {
+                'uso': f"{convertir_bytes_a_megabytes(estadisticas_memoria['usage']):.2f} ",#MB
+                'limite': f"{convertir_bytes_a_megabytes(estadisticas_memoria['limit']):.2f} ",#MB
+                'porcentaje': f"{(estadisticas_memoria['usage'] / estadisticas_memoria['limit']) * 100:.2f}"#%
+            },
+            'docker':{'name':'playwright'},
+            'almacenamiento': {
+                'memory_in': f"{memory_in:.2f} ",#MB
+                'memory_out': f"{memory_out:.2f} ",#KB
+                
+            },
+            'red': {
+                'red_in': f"{red_in:.2f} ", #KB
+                'red_out': f"{red_out:.2f} ", #KB
+            },
+            'cpu': {
+                'porcentaje': f"{porcentaje_cpu:.2f}" #%
+            },
+        })
+    except:
+        cliente_docker = docker.from_env()
+        nombre_contenedor = 'playwright'  # Reemplaza con el nombre de tu contenedor
+        contenedor = cliente_docker.containers.get(nombre_contenedor)
+        estadisticas = contenedor.stats(stream=True, decode=True)
+        primera_actualizacion = next(estadisticas)
+        estadisticas_memoria = primera_actualizacion['memory_stats']
+        red_in = primera_actualizacion['networks']['eth0']['rx_bytes']
+        red_out = primera_actualizacion['networks']['eth0']['rx_dropped']
+        red_in = convertir_bytes_a_kilobytes(red_in)
+        red_out = convertir_bytes_a_kilobytes(red_out)
+        estadisticas_almacenamiento = primera_actualizacion['blkio_stats']
+        porcentaje_cpu = primera_actualizacion['cpu_stats']['cpu_usage']['total_usage'] / primera_actualizacion['cpu_stats']['system_cpu_usage'] * 100
+        return jsonify({
         'ram': {
             'uso': f"{convertir_bytes_a_megabytes(estadisticas_memoria['usage']):.2f} ",#MB
             'limite': f"{convertir_bytes_a_megabytes(estadisticas_memoria['limit']):.2f} ",#MB
             'porcentaje': f"{(estadisticas_memoria['usage'] / estadisticas_memoria['limit']) * 100:.2f}"#%
         },
+        'docker':{'name':'playwright'},
         'almacenamiento': {
-            'memory_in': f"{memory_in:.2f} ",#MB
-            'memory_out': f"{memory_out:.2f} ",#KB
-            
+            'memory_in': f"0",#MB
+            'memory_out': f"0",#KB
         },
         'red': {
             'red_in': f"{red_in:.2f} ", #KB
@@ -125,39 +163,74 @@ def get_container_stats_playwright():
             'porcentaje': f"{porcentaje_cpu:.2f}" #%
         },
     })
+        
     
 @app.route('/container_redis', methods=['GET'])
 def get_container_stats_redis():
-    print("La solicitud ha sido recibida")
-    cliente_docker = docker.from_env()
-    nombre_contenedor = 'redis'  # Reemplaza con el nombre de tu contenedor
-    contenedor = cliente_docker.containers.get(nombre_contenedor)
-    estadisticas = contenedor.stats(stream=True, decode=True)
-    primera_actualizacion = next(estadisticas)
-    estadisticas_memoria = primera_actualizacion['memory_stats']
-    estadisticas_almacenamiento = primera_actualizacion['blkio_stats']
-    porcentaje_cpu = primera_actualizacion['cpu_stats']['cpu_usage']['total_usage'] / primera_actualizacion['cpu_stats']['system_cpu_usage'] * 100
-    pids = primera_actualizacion['pids_stats']['current']
-    estadisticas_block_io = primera_actualizacion['blkio_stats']['io_service_bytes_recursive']
-    memory_in = primera_actualizacion['blkio_stats']['io_service_bytes_recursive'][0]['value']
-    memory_out = primera_actualizacion['blkio_stats']['io_service_bytes_recursive'][1]['value']
-    memory_in = convertir_bytes_a_megabytes(memory_in)
-    memory_out = convertir_bytes_a_kilobytes(memory_out)
-    red_in = primera_actualizacion['networks']['eth0']['rx_bytes']
-    red_out = primera_actualizacion['networks']['eth0']['rx_dropped']
-    red_in = convertir_bytes_a_kilobytes(red_in)
-    red_out = convertir_bytes_a_kilobytes(red_out)
-    print(estadisticas)
-    return jsonify({
+    try:
+        print("La solicitud ha sido recibida")
+        cliente_docker = docker.from_env()
+        nombre_contenedor = 'redis'  # Reemplaza con el nombre de tu contenedor
+        contenedor = cliente_docker.containers.get(nombre_contenedor)
+        estadisticas = contenedor.stats(stream=True, decode=True)
+        primera_actualizacion = next(estadisticas)
+        estadisticas_memoria = primera_actualizacion['memory_stats']
+        estadisticas_almacenamiento = primera_actualizacion['blkio_stats']
+        porcentaje_cpu = primera_actualizacion['cpu_stats']['cpu_usage']['total_usage'] / primera_actualizacion['cpu_stats']['system_cpu_usage'] * 100
+        pids = primera_actualizacion['pids_stats']['current']
+        estadisticas_block_io = primera_actualizacion['blkio_stats']['io_service_bytes_recursive']
+        memory_in = primera_actualizacion['blkio_stats']['io_service_bytes_recursive'][0]['value']
+        memory_out = primera_actualizacion['blkio_stats']['io_service_bytes_recursive'][1]['value']
+        memory_in = convertir_bytes_a_megabytes(memory_in)
+        memory_out = convertir_bytes_a_kilobytes(memory_out)
+        red_in = primera_actualizacion['networks']['eth0']['rx_bytes']
+        red_out = primera_actualizacion['networks']['eth0']['rx_dropped']
+        red_in = convertir_bytes_a_kilobytes(red_in)
+        red_out = convertir_bytes_a_kilobytes(red_out)
+        print(estadisticas)
+        return jsonify({
+            'ram': {
+                'uso': f"{convertir_bytes_a_megabytes(estadisticas_memoria['usage']):.2f} ",#MB
+                'limite': f"{convertir_bytes_a_megabytes(estadisticas_memoria['limit']):.2f} ",#MB
+                'porcentaje': f"{(estadisticas_memoria['usage'] / estadisticas_memoria['limit']) * 100:.2f}"#%
+            },
+            'docker':{'name':'redis'},
+            'almacenamiento': {
+                'memory_in': f"{memory_in:.2f} ",#MB
+                'memory_out': f"{memory_out:.2f} ",#KB
+                
+            },
+            'red': {
+                'red_in': f"{red_in:.2f} ", #KB
+                'red_out': f"{red_out:.2f} ", #KB
+            },
+            'cpu': {
+                'porcentaje': f"{porcentaje_cpu:.2f}" #%
+            },
+        })
+    except:
+        cliente_docker = docker.from_env()
+        nombre_contenedor = 'redis'  # Reemplaza con el nombre de tu contenedor
+        contenedor = cliente_docker.containers.get(nombre_contenedor)
+        estadisticas = contenedor.stats(stream=True, decode=True)
+        primera_actualizacion = next(estadisticas)
+        estadisticas_memoria = primera_actualizacion['memory_stats']
+        red_in = primera_actualizacion['networks']['eth0']['rx_bytes']
+        red_out = primera_actualizacion['networks']['eth0']['rx_dropped']
+        red_in = convertir_bytes_a_kilobytes(red_in)
+        red_out = convertir_bytes_a_kilobytes(red_out)
+        estadisticas_almacenamiento = primera_actualizacion['blkio_stats']
+        porcentaje_cpu = primera_actualizacion['cpu_stats']['cpu_usage']['total_usage'] / primera_actualizacion['cpu_stats']['system_cpu_usage'] * 100
+        return jsonify({
         'ram': {
             'uso': f"{convertir_bytes_a_megabytes(estadisticas_memoria['usage']):.2f} ",#MB
             'limite': f"{convertir_bytes_a_megabytes(estadisticas_memoria['limit']):.2f} ",#MB
             'porcentaje': f"{(estadisticas_memoria['usage'] / estadisticas_memoria['limit']) * 100:.2f}"#%
         },
+        'docker':{'name':'redis'},
         'almacenamiento': {
-            'memory_in': f"{memory_in:.2f} ",#MB
-            'memory_out': f"{memory_out:.2f} ",#KB
-            
+            'memory_in': f"0",#MB
+            'memory_out': f"0",#KB
         },
         'red': {
             'red_in': f"{red_in:.2f} ", #KB
@@ -167,6 +240,7 @@ def get_container_stats_redis():
             'porcentaje': f"{porcentaje_cpu:.2f}" #%
         },
     })
+        
     
 @app.route('/container_ngnix', methods=['GET'])
 def get_container_stats_ngnix():
@@ -229,6 +303,44 @@ def iniciar_contenedor():
         return jsonify({
             'status': 400,
             'mensaje': 'Contenedor iniciado'
+        })
+        
+@app.route('/container_restart', methods=['POST'])
+def reiniciar_contenedor():
+    nombre = request.get_json()
+    nombre = nombre['contenedor']
+    print(nombre)
+    try:
+
+        subprocess.run(["docker", "restart", nombre])
+        return jsonify({
+        'status': 400,
+        'mensaje': 'Contenedor reiniciado'
+    })
+    except:
+        print("Error al reiniciar el contenedor")
+        return jsonify({
+            'status': 200,
+            'mensaje': 'Error al reiniciar el contenedor'
+        })
+@app.route('/container_stop', methods=['POST'])
+def detener_contenedor():
+    nombre = request.get_json()
+    nombre = nombre['contenedor']
+    cliente_docker = docker.from_env()
+    contenedor = cliente_docker.containers.get(nombre)
+    #verificar si el contenedor esta corriendo
+    print(contenedor.status)
+    if contenedor.status == 'running':
+        contenedor.stop()
+        return jsonify({
+            'status': 200,
+            'mensaje': 'El contenedor se detuvo'
+        })
+    else:
+        return jsonify({
+            'status': 400,
+            'mensaje': 'Contenedor no esta iniciado'
         })
  
     
