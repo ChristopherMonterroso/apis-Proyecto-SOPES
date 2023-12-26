@@ -270,6 +270,7 @@ def get_container_stats_ngnix():
             'limite': f"{convertir_bytes_a_megabytes(estadisticas_memoria['limit']):.2f} ",#MB
             'porcentaje': f"{(estadisticas_memoria['usage'] / estadisticas_memoria['limit']) * 100:.2f}"#%
         },
+        'docker':{'name':'redis'},
         'almacenamiento': {
             'memory_in': f"{memory_in:.2f} ",#MB
             'memory_out': f"{memory_out:.2f} ",#KB
