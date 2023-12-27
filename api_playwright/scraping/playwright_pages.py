@@ -7,6 +7,8 @@ from reportlab.lib import colors
 import smtplib
 import json
 import time
+from cryptography.fernet import Fernet
+import hashlib
 import redis
 from concurrent.futures import ThreadPoolExecutor
 from email.mime.text import MIMEText
@@ -21,11 +23,14 @@ pdf_content = "Reporte_Playwright.pdf"
 pdf = SimpleDocTemplate(pdf_content, pagesize=letter)
 col_widths2 = [pdf.width / 3.0] * 3
         # Crear la tabla y aplicar estilo
-
+clave_cifrado = Fernet.generate_key()
+cipher_suite = Fernet(clave_cifrado)
 content = []
 redis_host = '192.168.1.41'
 redis_port = 8000
 redis_db = 0
+
+
 async def run(instagram_url, facebook_url, twitter_url, linkedin_url):
     tasks = []
     error_report = []
@@ -257,11 +262,18 @@ async def save_to_redis(pagina, informacion, posts, followers, followed):
     }
         lista_datos.append(data)
         segundo = time.time()
+        datos_cifrados = encrypt_data(lista_datos)
+        print("datos encriptados")
+        print(datos_cifrados)
         data_to_insert= [
          {'key': str(segundo),
-             'value': json.dumps(lista_datos),
+             'value': datos_cifrados,
             },
         ]
+        #desencriptar
+        datos_desencriptados = decrypt_data(datos_cifrados)
+        print("datos desencriptados")
+        print(datos_desencriptados)
         with ThreadPoolExecutor(max_workers=2) as executor:
     # Ejecutar las operaciones de inserción en Redis de manera paralela
             futures_insert = [executor.submit(insert_data_into_redis, data) for data in data_to_insert]
@@ -388,5 +400,16 @@ def add_table(data):
     ])
     table.setStyle(style)
     content.append(table)
+    
+def encrypt_data(data):
+    json_data = json.dumps(data)
+    encrypted_data = cipher_suite.encrypt(json_data.encode('utf-8'))
+    return encrypted_data
+
+def decrypt_data(encrypted_data):
+    decrypted_data = cipher_suite.decrypt(encrypted_data)
+    return json.loads(decrypted_data.decode('utf-8'))
+
 if __name__ == "__main__":
     asyncio.run(run('','http://www.facebook.com/kemgt/','',''))
+    

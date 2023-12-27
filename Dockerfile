@@ -21,6 +21,7 @@ RUN pip3 install selenium
 RUN pip3 install --upgrade Flask Jinja2
 RUN pip install redis
 RUN pip install reportlab
+RUN pip install cryptography
 # RUN playwright install
 # RUN pip3 install playwright
 #ejecutar dentro de Selenium_api main.py

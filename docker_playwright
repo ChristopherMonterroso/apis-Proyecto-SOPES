@@ -36,6 +36,7 @@ RUN pip3 install --upgrade selenium Flask Jinja2
 RUN pip3 install --upgrade playwright
 RUN playwright install
 RUN pip3 install redis
+RUN pip3 install cryptography
 RUN pip3 install reportlab
 # RUN apt-get -y --no-install-recommends install playwright
 
