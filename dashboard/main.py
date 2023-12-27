@@ -242,7 +242,7 @@ def get_container_stats_redis():
     })
         
     
-@app.route('/container_ngnix', methods=['GET'])
+@app.route('/container_nginx', methods=['GET'])
 def get_container_stats_ngnix():
     print("La solicitud ha sido recibida")
     cliente_docker = docker.from_env()
@@ -335,12 +335,12 @@ def detener_contenedor():
     if contenedor.status == 'running':
         contenedor.stop()
         return jsonify({
-            'status': 200,
+            'status': 400,
             'mensaje': 'El contenedor se detuvo'
         })
     else:
         return jsonify({
-            'status': 400,
+            'status': 200,
             'mensaje': 'Contenedor no esta iniciado'
         })
  

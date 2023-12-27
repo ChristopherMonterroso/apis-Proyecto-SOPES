@@ -36,7 +36,7 @@ const App = () => {
       });
       const datos = await respuesta.json();
 
-      if (datos.status === 400) {
+      if (datos.status === 200) {
         Swal.fire({
           icon: 'error',
           title: `Contenedor No ${accion}`,
